@@ -1,0 +1,1 @@
+wt -p "Command Prompt" py pccscraper.py >nul 2>&1 || ( py pccscraper.py )
