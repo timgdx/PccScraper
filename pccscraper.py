@@ -8,6 +8,7 @@ import os
 import datetime
 
 ##############
+ANSI_SUPPORT = True
 MIN_PRICE = 200
 MAX_PRICE = 620
 TARGET_PRODUCTS = ["3080","3070 Ti","6800"]
@@ -80,20 +81,20 @@ def main():
                     if historyPriceOld:
                         priceDelta = price-historyPriceOld
                         if priceDelta > 0:
-                            priceDeltaStr = MORE_COLOR+f"(+{priceDelta:.2f})"+RESET_COLOR
+                            priceDeltaStr = colorString(f"(+{priceDelta:.2f})",MORE_COLOR)
                         elif priceDelta < 0:
-                            priceDeltaStr = LESS_COLOR+f"({priceDelta:.2f})"+RESET_COLOR
+                            priceDeltaStr = colorString(f"({priceDelta:.2f})",LESS_COLOR)
                     #
                     availabilityColor = RESET_COLOR if available else MORE_COLOR
-                    refurbishedStr = REFURBISHED_COLOR+"[R]"+RESET_COLOR if refurbished else ""
+                    refurbishedStr = colorString("[R]",REFURBISHED_COLOR) if refurbished else ""
                     if [price-OPTIMAL_PRICE[x] for x in range(len(TARGET_PRODUCTS)) if TARGET_PRODUCTS[x] in product["name"]][0] > 0:
-                        products.append([priceDeltaStr+str(price),refurbishedStr+availabilityColor+product["name"]+RESET_COLOR,link(URL+product["slug"],"Link")])
+                        products.append([priceDeltaStr+str(price),refurbishedStr+colorString(product["name"],availabilityColor),link(URL+product["slug"],"Link")])
                     else:
                         if available:
-                            products.append([priceDeltaStr+OPTIMAL_COLOR+str(price)+RESET_COLOR,refurbishedStr+OPTIMAL_COLOR+product["name"]+RESET_COLOR,OPTIMAL_COLOR+link(URL+product["slug"],"Link")+RESET_COLOR])
+                            products.append([priceDeltaStr+colorString(str(price),OPTIMAL_COLOR),refurbishedStr+colorString(product["name"],OPTIMAL_COLOR),colorString(link(URL+product["slug"],"Link"),OPTIMAL_COLOR)])
                             print('\007') # sound alert
                         else:
-                            products.append([priceDeltaStr+OPTIMAL_COLOR+str(price)+RESET_COLOR,refurbishedStr+availabilityColor+product["name"]+RESET_COLOR,OPTIMAL_COLOR+link(URL+product["slug"],"Link")+RESET_COLOR])
+                            products.append([priceDeltaStr+colorString(str(price),OPTIMAL_COLOR),refurbishedStr+colorString(product["name"],availabilityColor),colorString(link(URL+product["slug"],"Link"),OPTIMAL_COLOR)])
             currentPage += 1
         print(f"Filtered through {productsFound} products")
         for p in products:
@@ -113,8 +114,13 @@ def main():
 def exitGracefully(x,y):
     exit()
 
+def colorString(str,color):
+    return color+str+RESET_COLOR if ANSI_SUPPORT else str
+
 # https://stackoverflow.com/a/71309268
 def link(url, label=None): # doesn't work with cmd
+    if not ANSI_SUPPORT:
+        return url
     if label is None: 
         label = url
     # OSC 8 ; params ; URI ST <name> OSC 8 ;; ST 
