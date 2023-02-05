@@ -8,18 +8,20 @@ import os
 import datetime
 
 ##############
+MIN_PRICE = 200
 MAX_PRICE = 620
 TARGET_PRODUCTS = ["3080","3070 Ti","6800"]
 OPTIMAL_PRICE = [550,400,550]
 AVAILABLE_ONLY = False
 LOOP = 60*5 # 0 - run once; > 0 - run every X seconds
 URL = "https://www.pccomponentes.pt/"
-TARGET_URL = "https://www.pccomponentes.pt/api-v1/products/search?categoryId=2194165b-70a8-4e4e-ab74-0007a55b73ab&sort=price_asc&channel=pt&page={0}&pageSize=40&seller_type[]=pccomponentes_seller&offer_promotional_price_from=200&offer_promotional_price_to={1}"
+TARGET_URL = "https://www.pccomponentes.pt/api-v1/products/search?categoryId=2194165b-70a8-4e4e-ab74-0007a55b73ab&sort=price_asc&channel=pt&page={0}&pageSize=40&seller_type[]=pccomponentes_seller&offer_promotional_price_from={1}&offer_promotional_price_to={2}"
 ##############
 
 OPTIMAL_COLOR = "\033[38;5;35m"
 MORE_COLOR = "\033[38;5;196m"
 LESS_COLOR = "\033[38;5;40m"
+REFURBISHED_COLOR = "\033[38;5;11m"
 RESET_COLOR = "\033[0m"
 HISTORY_FILENAME = "history.json"
 
@@ -49,7 +51,7 @@ def main():
             response = None
             data = None
             try:
-                response = scraper.get(TARGET_URL.format(currentPage,MAX_PRICE)).text
+                response = scraper.get(TARGET_URL.format(currentPage,MIN_PRICE,MAX_PRICE)).text
                 data = json.loads(response)
                 if len(data["articles"]) == 0:
                     break
@@ -61,17 +63,19 @@ def main():
                 available = len(product["availability"]) > 0
                 if any(x in product["name"] for x in TARGET_PRODUCTS) and ((AVAILABLE_ONLY and available) or not AVAILABLE_ONLY):
                     price = float(product["originalPrice"]) if not (product["promotionalPrice"]) else float(product["promotionalPrice"])
-                    historyPrice = history.get(product["name"])
+                    refurbished = "refurbished" in product["flags"]
+                    saveName = "[R]"+product["name"] if refurbished else product["name"]
+                    historyPrice = history.get(saveName)
                     # save to history
                     if historyPrice:
                         if price < historyPrice:
                             historyChanged = True
-                            history[product["name"]] = price
+                            history[saveName] = price
                     else:
                         historyChanged = True
-                        history[product["name"]] = price
+                        history[saveName] = price
                     # price delta - uses data from the start
-                    historyPriceOld = historyOld.get(product["name"])
+                    historyPriceOld = historyOld.get(saveName)
                     priceDeltaStr = ""
                     if historyPriceOld:
                         priceDelta = price-historyPriceOld
@@ -81,14 +85,15 @@ def main():
                             priceDeltaStr = LESS_COLOR+f"({priceDelta:.2f})"+RESET_COLOR
                     #
                     availabilityColor = RESET_COLOR if available else MORE_COLOR
+                    refurbishedStr = REFURBISHED_COLOR+"[R]"+RESET_COLOR if refurbished else ""
                     if [price-OPTIMAL_PRICE[x] for x in range(len(TARGET_PRODUCTS)) if TARGET_PRODUCTS[x] in product["name"]][0] > 0:
-                        products.append([priceDeltaStr+str(price),availabilityColor+product["name"]+RESET_COLOR,link(URL+product["slug"],"Link")])
+                        products.append([priceDeltaStr+str(price),refurbishedStr+availabilityColor+product["name"]+RESET_COLOR,link(URL+product["slug"],"Link")])
                     else:
                         if available:
-                            products.append([priceDeltaStr+OPTIMAL_COLOR+str(price)+RESET_COLOR,OPTIMAL_COLOR+product["name"]+RESET_COLOR,OPTIMAL_COLOR+link(URL+product["slug"],"Link")+RESET_COLOR])
+                            products.append([priceDeltaStr+OPTIMAL_COLOR+str(price)+RESET_COLOR,refurbishedStr+OPTIMAL_COLOR+product["name"]+RESET_COLOR,OPTIMAL_COLOR+link(URL+product["slug"],"Link")+RESET_COLOR])
                             print('\007') # sound alert
                         else:
-                            products.append([priceDeltaStr+OPTIMAL_COLOR+str(price)+RESET_COLOR,availabilityColor+product["name"]+RESET_COLOR,OPTIMAL_COLOR+link(URL+product["slug"],"Link")+RESET_COLOR])
+                            products.append([priceDeltaStr+OPTIMAL_COLOR+str(price)+RESET_COLOR,refurbishedStr+availabilityColor+product["name"]+RESET_COLOR,OPTIMAL_COLOR+link(URL+product["slug"],"Link")+RESET_COLOR])
             currentPage += 1
         print(f"Filtered through {productsFound} products")
         for p in products:
