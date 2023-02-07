@@ -1,7 +1,7 @@
 # PccScraper
 PcComponentes scraper for graphic cards deals.
 Keeps a history of the lowest price for each individual product and shows a delta when the current price is different.  
-If your terminal supports ANSI escape codes set ANSI_SUPPORT=True.
+If your terminal supports ANSI escape codes (eg: Windows Terminal) set ANSI_SUPPORT=True.
 
 Settings:
 ```

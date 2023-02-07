@@ -8,7 +8,7 @@ import os
 import datetime
 
 ##############
-ANSI_SUPPORT = True
+ANSI_SUPPORT = False
 MIN_PRICE = 200
 MAX_PRICE = 620
 TARGET_PRODUCTS = ["3080","3070 Ti","6800"]
@@ -110,6 +110,8 @@ def main():
             pt.clear_rows()
             time.sleep(LOOP)
             os.system('cls' if os.name=='nt' else 'clear')
+        else:
+            break
 
 def exitGracefully(x,y):
     exit()
