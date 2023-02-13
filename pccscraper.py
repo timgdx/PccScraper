@@ -8,7 +8,7 @@ import os
 import datetime
 
 ##############
-ANSI_SUPPORT = False
+ANSI_SUPPORT = True
 MIN_PRICE = 200
 MAX_PRICE = 620
 TARGET_PRODUCTS = ["3080","3070 Ti","6800"]
@@ -31,7 +31,11 @@ def main():
     signal.signal(signal.SIGINT, exitGracefully)
     signal.signal(signal.SIGTERM, exitGracefully)
     # history
-    historyFile = open(HISTORY_FILENAME,"r+")
+    historyFile = None
+    try:
+        historyFile = open(HISTORY_FILENAME,"r+")
+    except:
+        historyFile = open(HISTORY_FILENAME,"w+")
     history = None
     try:
         history = json.load(historyFile)
