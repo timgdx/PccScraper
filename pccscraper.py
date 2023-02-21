@@ -10,10 +10,11 @@ import datetime
 ##############
 ANSI_SUPPORT = True
 MIN_PRICE = 200
-MAX_PRICE = 620
-TARGET_PRODUCTS = ["3080","3070 Ti","6800"]
-OPTIMAL_PRICE = [550,400,550]
+MAX_PRICE = 1000
+TARGET_PRODUCTS = ["3080","3070 Ti","6800","4070"]
+OPTIMAL_PRICE = [550,400,550,1000]
 AVAILABLE_ONLY = False
+OPTIMAL_ONLY = False
 LOOP = 60*5 # 0 - run once; > 0 - run every X seconds
 URL = "https://www.pccomponentes.pt/"
 TARGET_URL = "https://www.pccomponentes.pt/api-v1/products/search?categoryId=2194165b-70a8-4e4e-ab74-0007a55b73ab&sort=price_asc&channel=pt&page={0}&pageSize=40&seller_type[]=pccomponentes_seller&offer_promotional_price_from={1}&offer_promotional_price_to={2}"
@@ -92,7 +93,8 @@ def main():
                     availabilityColor = RESET_COLOR if available else MORE_COLOR
                     refurbishedStr = colorString("[R]",REFURBISHED_COLOR) if refurbished else ""
                     if [price-OPTIMAL_PRICE[x] for x in range(len(TARGET_PRODUCTS)) if TARGET_PRODUCTS[x] in product["name"]][0] > 0:
-                        products.append([priceDeltaStr+str(price),refurbishedStr+colorString(product["name"],availabilityColor),link(URL+product["slug"],"Link")])
+                        if not OPTIMAL_ONLY:
+                            products.append([priceDeltaStr+str(price),refurbishedStr+colorString(product["name"],availabilityColor),link(URL+product["slug"],"Link")])
                     else:
                         if available:
                             products.append([priceDeltaStr+colorString(str(price),OPTIMAL_COLOR),refurbishedStr+colorString(product["name"],OPTIMAL_COLOR),colorString(link(URL+product["slug"],"Link"),OPTIMAL_COLOR)])
